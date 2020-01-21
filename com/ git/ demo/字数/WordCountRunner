@@ -1,0 +1,73 @@
+package com.bw.demo.wordcount;
+
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
+/**
+ * wordcount运行类
+ * @author asus
+ *
+ */
+public class WordCountRunner implements Tool {
+	
+	//定义运行期间使用的配置信息对象
+	private Configuration conf = null;
+	
+	@Override
+	public Configuration getConf() {
+		// TODO Auto-generated method stub
+		return this.conf;
+	}
+
+	@Override
+	public void setConf(Configuration conf) {
+		// TODO Auto-generated method stub
+		this.conf = conf;
+	}
+
+	@Override
+	public int run(String[] arg0) throws Exception {
+		// 1.使用配置信息对象创建任务对象
+			//获取配置信息对象
+			Configuration conf = this.getConf();
+			Job job = Job.getInstance(conf,"wordcount");
+		//2.向任务注册jar包所在位置
+			//依靠当前类位置指明所在jar包位置
+			job.setJarByClass(WordCountRunner.class);
+		//3.向任务对象注册mapper
+			//注册mapper类
+			job.setMapperClass(WordCountMapper.class);
+			//注册mapper输出的key的类型
+			job.setMapOutputKeyClass(Text.class);
+			//注册mapper输出的value的类型
+			job.setMapOutputValueClass(IntWritable.class);
+		//4.向任务对象注册reducer
+			job.setReducerClass(WordCountReducer.class);
+			job.setOutputKeyClass(Text.class);
+			job.setOutputValueClass(IntWritable.class);
+		//5.向任务对象注册数据文件位置
+			FileInputFormat.setInputPaths(job, new Path("/input"));
+		//6.向任务对象统计结果输出文件位置
+			FileOutputFormat.setOutputPath(job, new Path("/output"));
+		return job.waitForCompletion(true)?0:1;
+	}
+
+	public static void main(String[] args) {
+		try {
+			ToolRunner.run(
+					new Configuration(),//配置信息对象
+					new WordCountRunner(),//要驱动哪个任务 
+					args);//从命令行输出的参数  会被传入run方法
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+}
